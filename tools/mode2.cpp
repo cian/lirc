@@ -326,12 +326,24 @@ unsigned int get_codelength(int fd, int use_raw_access)
 void print_mode2_data(unsigned int data)
 {
 	static int bitno = 1;
+	static bool leading_space = true;
+	unsigned int msg = data & LIRC_MODE2_MASK;
 
 	switch (opt_dmode) {
 	case 0:
-		printf("%s %u\n", (
-			       data & PULSE_BIT) ? "pulse" : "space",
-		       (uint32_t)(data & PULSE_MASK));
+		if (leading_space && msg == LIRC_MODE2_SPACE ) {
+			break;
+		} else {
+			leading_space = false;
+		}
+		if (msg == LIRC_MODE2_PULSE) {
+			printf("pulse %u\n", (__u32)(data & PULSE_MASK));
+		} else if (msg == LIRC_MODE2_SPACE) {
+			printf("space %u\n", (__u32)(data & PULSE_MASK));
+		} else if (msg == LIRC_MODE2_TIMEOUT) {
+			printf("timeout %u\n", (__u32)(data & PULSE_MASK));
+			leading_space = true;
+		}
 		break;
 	case 1: {
 		/* print output like irrecord raw config file data */
